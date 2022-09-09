@@ -12,7 +12,9 @@ from rich.table import Table
 
 class GetLeetCodeTestCase:
     def __init__(self, problem_content):
-        self.str = problem_content.replace('null', 'None')
+        for arg in (('null', 'None'), ('true', 'True'), ('false', 'False')):  # replace strings
+            problem_content = problem_content.replace(*arg)
+        self.str = problem_content
         # self.regex = r"^(Input|Output): ?(.*)$"  # 以 换行符号 作为分割
         # self.regex = r"^(Input:|Output:)([\s\S]*?)(\n ?\n|(?=\n[A-Z]))"  # 以 双换行符号 或者 换行符加大写字母 作为分割
         self.regex = r"^(Input:|Output:|输入：|输出：|输入:|输出:)([\s\S]*?)(\n ?\n|(?=\n[A-Z])|(?=\n[\u4e00-\u9fa5]))"  # 以 双换行符号 或者 换行符加大写字母（或汉字） 作为分割
