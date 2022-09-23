@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='PythonLeetcodeRunner',
-    version='1.0.2',
+    version='1.0.3',
     author='hhqx',
     author_email='weiwushaonian@foxmail.com',
     description='This is a package help you to run leetcode in local python IDE.',

@@ -36,53 +36,111 @@ class GetLeetCodeTestCase:
             inout_str = match.group(2)
             # save to dict
             self.inout_string[inout_type].append(inout_str)  # append input and output string
-            key_value = self.extract_KeyValue_before_equal(inout_str) if inout_type == "Input" \
+            key_value = self.extract_KeyValue_in_Input(inout_str) if inout_type == "Input" \
                 else eval(inout_str)  # get dict
             self.inout_dict[inout_type].append(key_value)
         return self.inout_dict
 
-    def extract_KeyValue_before_equal(self, str):
+    def extract_KeyValue_in_Input(self, str):
+        def find_delimiter(s):
+            char_in = ['[', '{', '(', '"', "'", ]
+            char_out = [']', '}', ')', '"', "'", ]
+
+            ans = []
+            stack = []
+            for i, c in enumerate(s):
+                if c in char_in:
+                    if stack and stack[-1] in ['"', ","]:
+                        stack.pop()
+                    else:
+                        stack.append(c)
+                elif c in char_out:
+                    stack.pop()
+                    if not stack:
+                        ans.append(i + 1)
+            return ans
+
         dict_out = {}
         # remove space
-        str = str.replace(' ', '')
+        # str = str.replace(' ', '')
 
         # find ',' before '='
-        out = {'comma': [], }
-        comma = -1
-        for idx, c in enumerate(str):
-            if c == ',':
-                comma = idx
-            elif c == '=' and comma >= 0:
-                out['comma'].append(comma)
+        if '=' in str:
+            delimiter = []
+            comma = -1
+            for idx, c in enumerate(str):
+                if c == ',':
+                    comma = idx
+                elif c == '=' and comma >= 0:
+                    delimiter.append(comma)
+            delimiter += [len(str)]
+        else:
+            delimiter = find_delimiter(str)
 
         # extract key-value string
-        start_end_position = [-1] + out['comma'] + [len(str)]
+        start_end_position = [-1] + delimiter
         for i in range(len(start_end_position) - 1):
-            start, end = start_end_position[i] + 1, start_end_position[i + 1]
+            start, end = start_end_position[i]+1, start_end_position[i + 1]
             # key-value string
             string = str[start:end]
             # get key-value dict
-            key, value_string = re.findall(r'(.*)=(.*)', string)[0]
+            # key, value_string = re.findall(r'(.*)=(.*)', string)[0]
+            if '=' in string:
+                idx_equal = string.index('=')
+                key, value_string = string[:idx_equal], string[idx_equal + 1:]
+                key = key.replace(' ', '').replace('\n', '')
+            else:
+                key, value_string = f'input_{i+1}', string
+
             dict_out[key] = eval(value_string)
             # print((key, value_string))
 
         return dict_out
 
 class StartTest:
-    def __init__(self, question_content, solution_class):
+    def __init__(self, question_content, solution_class, isDesignedClass=False):
+        # read config
+        self.config = {'isDesignedClass': False, 'outputIsSet': False}  # set default
+        for k, v in {'isDesignedClass': isDesignedClass}.items():  # set config according to the input config
+            # if k in self.config:
+            self.config[k] = v
+
         # initial variables
         self.question_content = question_content
+        self.input_import_func = None
         self.solution_class = solution_class
+        self.designed_class = solution_class
+        self.designed_obj = None
 
         # Get Test Case
         self.get_test_case()
 
-        # Get Solution Entry
-        self.Solution = solution_class()
-        entry_function_name = self.get_solution_entry_function_name()
-        self.get_input_import_func(entry_function_name)
-
-        self.SolutionEntryHandle = getattr(self.Solution, entry_function_name)
+        if not self.config['isDesignedClass']:
+            # Get Solution Entry
+            self.Solution = solution_class()
+            entry_function_name = self.get_solution_entry_function_name()
+            self.get_input_import_func(entry_function_name)
+            SolutionEntryHandle = getattr(self.Solution, entry_function_name)
+        else:
+            def evaluate(**kargs):
+            # def evaluate(op, args):
+                out = []
+                # out = [getattr(self, f)(*arg) for f, arg in zip(op, args)]
+                op = kargs['op'] if 'op' in kargs else kargs['input_1']
+                args = kargs['args'] if 'args' in kargs else kargs['input_2']
+                op, args = list(kargs.values())[:2]
+                for f, arg in zip(op, args):
+                    # print(f, arg)
+                    if f == self.designed_class.__name__:
+                        self.designedObj = self.designed_class(*arg)
+                        out.append(None)
+                    else:
+                        f = getattr(self.designedObj, f)
+                        out.append(f(*arg))
+                return out
+            SolutionEntryHandle = evaluate
+        # Get Test Entry
+        self.SolutionEntryHandle = SolutionEntryHandle
         pass
 
     def get_solution_entry_function_name(self):
@@ -170,7 +228,7 @@ class StartTest:
         for i, kwargs, result_true in zip(range(len(self.kwargs_in)), self.kwargs_in, self.ground_truth):
             # If data_class has defined import function, convert the input to specified data type.
             for k, v in kwargs.items():
-                import_func = self.input_import_func[k]
+                import_func = self.input_import_func[k] if self.input_import_func else lambda x: x
                 kwargs[k] = import_func(v)
             # kwargs = kwargs.copy()
             input_str = '\n'.join([f'{k}: {v}' for k, v in kwargs.items()])  # input_str

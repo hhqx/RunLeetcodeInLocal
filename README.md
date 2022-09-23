@@ -11,7 +11,14 @@
 pip install git+https://github.com/hhqx/RunLeetcodeInLocal.git
 ```
 
+## Recent Changes
 
+- 2022年9月23日17:27:50, Add support to designed class problem
+  ```python
+  TestObj = StartTest(question_content, Your_Designed_Class, isDesignedClass=True)
+  # TestObj = StartTest(question_content, Solution)  # default is False
+  TestObj.run_test()
+  ```
 
 ## Edit local template
 
