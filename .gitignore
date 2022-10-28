@@ -1,0 +1,14 @@
+#build/*
+build
+dist
+PythonLeetcodeRunner.egg-info
+.idea
+#.gitignore
+
+#PythonLeetcodeRunner/my_test.py
+my_test.py
+#__init__.py
+__**__
+
+
+
