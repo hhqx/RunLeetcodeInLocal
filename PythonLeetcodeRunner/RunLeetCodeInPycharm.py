@@ -9,11 +9,26 @@ from typing import *
 from rich.console import Console
 from rich.table import Table
 
+import re
+
+def multiple_replacer(*key_values):
+    replace_dict = dict(key_values)
+    replacement_function = lambda match: replace_dict[match.group(0)]
+    pattern = re.compile("|".join([re.escape(k) for k, v in key_values]), re.M)
+    return lambda string: pattern.sub(replacement_function, string)
+
+def multiple_replace(string, *key_values):
+    return multiple_replacer(*key_values)(string)
+
 
 class GetLeetCodeTestCase:
     def __init__(self, problem_content):
-        for arg in (('null', 'None'), ('true', 'True'), ('false', 'False')):  # replace strings
-            problem_content = problem_content.replace(*arg)
+        replace_map = (('null', 'None'), ('true', 'True'), ('false', 'False'), ('测试用例', 'Input'), ('期望结果', 'Output'))
+
+        # for arg in (('null', 'None'), ('true', 'True'), ('false', 'False')):  # replace strings
+        #     problem_content = problem_content.replace(*arg)
+        problem_content = multiple_replacer(*replace_map)(problem_content)
+        
         self.str = problem_content
         # self.regex = r"^(Input|Output): ?(.*)$"  # 以 换行符号 作为分割
         # self.regex = r"^(Input:|Output:)([\s\S]*?)(\n ?\n|(?=\n[A-Z]))"  # 以 双换行符号 或者 换行符加大写字母 作为分割
@@ -58,6 +73,10 @@ class GetLeetCodeTestCase:
                     stack.pop()
                     if not stack:
                         ans.append(i + 1)
+                
+                # 如果栈空且遇到',', '\n'
+                if not stack and c in [',', '\n']:
+                    ans.append(i)
             return ans
 
         dict_out = {}
@@ -78,11 +97,17 @@ class GetLeetCodeTestCase:
             delimiter = find_delimiter(str)
 
         # extract key-value string
-        start_end_position = [-1] + delimiter
+        start_end_position = [-1] + delimiter + [len(str)]
+        cnt = 0
         for i in range(len(start_end_position) - 1):
             start, end = start_end_position[i]+1, start_end_position[i + 1]
+            
             # key-value string
             string = str[start:end]
+            if not string or string.isspace():
+                continue
+            # print(string)
+
             # get key-value dict
             # key, value_string = re.findall(r'(.*)=(.*)', string)[0]
             if '=' in string:
@@ -90,8 +115,9 @@ class GetLeetCodeTestCase:
                 key, value_string = string[:idx_equal], string[idx_equal + 1:]
                 key = key.replace(' ', '').replace('\n', '')
             else:
-                key, value_string = f'input_{i+1}', string
-
+                key, value_string = f'input_{cnt+1}', string
+            cnt += 1
+            
             dict_out[key] = eval(value_string)
             # print((key, value_string))
 
@@ -145,8 +171,13 @@ class StartTest:
 
     def get_solution_entry_function_name(self):
         # self.solution_class, self.kwargs_in_name
+        name_obj = list(inspect.getmembers(self.solution_class, inspect.isfunction))
+        # 根据函数定义行号排序
+        name_obj.sort(key=lambda x: x[1].__code__.co_firstlineno)
+
         # 利用inspect包，筛选 Solution 中的 function
-        for (func_name, func_obj) in inspect.getmembers(self.solution_class, inspect.isfunction):
+        name = None
+        for (func_name, func_obj) in name_obj:
             # get function args
             full_args = inspect.getfullargspec(func_obj)
             args = full_args.args
@@ -155,9 +186,12 @@ class StartTest:
             # 找出类内参数和输入参数一致的函数, 返回其名称
             if args[1:] == self.kwargs_in_name:
                 # print(f'Test function name: Solution.{func_name}, args: {args}')
-                return func_name
-            pass
-        return None
+                name = func_name
+        # 如果根据输入输出参数未找到名称一致的, 返回最后一个
+        if not name and name_obj:
+            name = name_obj[-1][0]
+        
+        return name
 
     def get_input_import_func(self, func_name):
         """ 若定义了类内方法 import_from_$Data_Type, 在本地调试时会将$Data_Type表示的输入数据导入到类中. """
@@ -228,14 +262,21 @@ class StartTest:
         for i, kwargs, result_true in zip(range(len(self.kwargs_in)), self.kwargs_in, self.ground_truth):
             # If data_class has defined import function, convert the input to specified data type.
             for k, v in kwargs.items():
-                import_func = self.input_import_func[k] if self.input_import_func else lambda x: x
+                if self.input_import_func and k in self.input_import_func:
+                    import_func = self.input_import_func[k]
+                else:
+                    import_func = lambda x: x
                 kwargs[k] = import_func(v)
             # kwargs = kwargs.copy()
             input_str = '\n'.join([f'{k}: {v}' for k, v in kwargs.items()])  # input_str
-            start_time = time.perf_counter_ns()  # perf_counter_ns: 计算sleep时间, process_time_ns: 不计算sleep时间
+            getTime = lambda : time.perf_counter_ns()  # perf_counter_ns: 计算sleep时间, process_time_ns: 不计算sleep时间
+            start_time = getTime()
             # Call the Entry Function Handle to Run the Test
-            my_out = self.SolutionEntryHandle(**kwargs)
-            elapsed_time = "{:.2f}".format(time.perf_counter_ns()/1000-start_time/1000)
+            try:
+                my_out = self.SolutionEntryHandle(**kwargs)
+            except:
+                my_out = self.SolutionEntryHandle(*list(kwargs.values()))
+            elapsed_time = "{:.3f}".format((getTime()-start_time)/(10**6))
 
             if print_flag:
                 print('\n' + '_'*10 + f' TEST{i+1} ' + '_'*15)

@@ -103,6 +103,8 @@ class TreeNode:
 
     def import_from(self, l_values):
         """ Build a tree from a list of values and return its root node. """
+        if not l_values:
+            return None
         self.build2(l_values)
         return self
 
