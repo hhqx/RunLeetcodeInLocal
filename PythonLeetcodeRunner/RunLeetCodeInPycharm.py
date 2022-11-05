@@ -22,7 +22,7 @@ def multiple_replace(string, *key_values):
 
 
 class GetLeetCodeTestCase:
-    def __init__(self, problem_content):
+    def __init__(self, problem_content, regex=None):
         replace_map = (('null', 'None'), ('true', 'True'), ('false', 'False'), ('测试用例', 'Input'), ('期望结果', 'Output'))
 
         # for arg in (('null', 'None'), ('true', 'True'), ('false', 'False')):  # replace strings
@@ -33,6 +33,7 @@ class GetLeetCodeTestCase:
         # self.regex = r"^(Input|Output): ?(.*)$"  # 以 换行符号 作为分割
         # self.regex = r"^(Input:|Output:)([\s\S]*?)(\n ?\n|(?=\n[A-Z]))"  # 以 双换行符号 或者 换行符加大写字母 作为分割
         self.regex = r"^(Input:|Output:|输入：|输出：|输入:|输出:)([\s\S]*?)(\n ?\n|(?=\n[A-Z])|(?=\n[\u4e00-\u9fa5]))"  # 以 双换行符号 或者 换行符加大写字母（或汉字） 作为分割
+        self.regex = regex if regex else self.regex
 
         # input and output variable
         self.inout_leading = {'输入：': 'Input', '输出：': 'Output',
@@ -77,6 +78,8 @@ class GetLeetCodeTestCase:
                 # 如果栈空且遇到',', '\n'
                 if not stack and c in [',', '\n']:
                     ans.append(i)
+                elif not stack and i==len(s)-1:
+                    ans.append(i+1)
             return ans
 
         dict_out = {}
@@ -124,7 +127,7 @@ class GetLeetCodeTestCase:
         return dict_out
 
 class StartTest:
-    def __init__(self, question_content, solution_class, isDesignedClass=False):
+    def __init__(self, question_content, solution_class, isDesignedClass=False, regex=None):
         # read config
         self.config = {'isDesignedClass': False, 'outputIsSet': False}  # set default
         for k, v in {'isDesignedClass': isDesignedClass}.items():  # set config according to the input config
@@ -137,6 +140,7 @@ class StartTest:
         self.solution_class = solution_class
         self.designed_class = solution_class
         self.designed_obj = None
+        self.regex = regex
 
         # Get Test Case
         self.get_test_case()
@@ -239,7 +243,7 @@ class StartTest:
 
     def get_test_case(self):
         # Get Test Case
-        TestCase = GetLeetCodeTestCase(self.question_content)
+        TestCase = GetLeetCodeTestCase(self.question_content, self.regex)
         data = TestCase.get_test_case()
         self.kwargs_in, self.ground_truth = data['Input'], data['Output'],
         self.kwargs_in_name = list(self.kwargs_in[0].keys())
