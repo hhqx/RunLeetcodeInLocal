@@ -13,3 +13,4 @@ from functools import *
 from math import *
 import operator
 import itertools
+import bisect

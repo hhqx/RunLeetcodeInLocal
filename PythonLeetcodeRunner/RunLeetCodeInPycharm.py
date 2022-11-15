@@ -276,9 +276,9 @@ class StartTest:
             getTime = lambda : time.perf_counter_ns()  # perf_counter_ns: 计算sleep时间, process_time_ns: 不计算sleep时间
             start_time = getTime()
             # Call the Entry Function Handle to Run the Test
-            try:
+            if 'input_1' not in kwargs or ('isDesignedClass' in self.config and self.config['isDesignedClass']):
                 my_out = self.SolutionEntryHandle(**kwargs)
-            except:
+            else:
                 my_out = self.SolutionEntryHandle(*list(kwargs.values()))
             elapsed_time = "{:.3f}".format((getTime()-start_time)/(10**6))
 
