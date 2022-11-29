@@ -3,6 +3,10 @@ import re
 import time
 
 # 巨好用的在线网站: https://regex101.com/
+# 正则非获取匹配: https://www.cnblogs.com/whaozl/p/5462865.html,
+# 正向反向, 肯定非获取:  (str?<=), (?=str)
+# 正向反向, 否定非获取:  (str?<!), (?!str)
+# 另外: str1|str2 的简洁形式:  str(?:1|2)
 
 from typing import *
 
