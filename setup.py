@@ -14,8 +14,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/hhqx/PythonLeetcodeRunner',
-    project_urls = {
-        "Bug Tracker": "https://github.com/mike-huls/PythonLeetcodeRunner/issues"
+    project_urls={
+        "Bug Tracker": "https://github.com/hhqx/PythonLeetcodeRunner/issues"
     },
     license='MIT',
     packages=['PythonLeetcodeRunner'],
