@@ -1,4 +1,5 @@
 
+numpy
 rich==11.0.0
 typing
 sortedcontaniners
