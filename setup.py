@@ -5,6 +5,9 @@ import setuptools
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open("requirements.txt", "r") as f:
+    requirements = f.readlines()
+
 setuptools.setup(
     name='PythonLeetcodeRunner',
     version='1.0.4',
@@ -19,7 +22,7 @@ setuptools.setup(
     },
     license='MIT',
     packages=['PythonLeetcodeRunner'],
-    install_requires=['rich', 'typing'],
+    install_requires=requirements,
 )
 
 
