@@ -6,19 +6,9 @@ from .def_List import ListNode
 
 from .def_Tree import TreeNode
 
-from sortedcontainers import *
-from collections import *
-import heapq
-from functools import *
-from math import *
-import operator
-import itertools
-import bisect
-
-
 # customed tools for debug
 # import matplotlib.pyplot as plt
-import numpy as np
+# import numpy as np
 
 # def plot_text(coords, sz=5):
 #     def add(x, y, str):

@@ -1,5 +1,6 @@
 import inspect
 import re
+import sys
 import time
 
 # 巨好用的在线网站: https://regex101.com/
@@ -261,7 +262,7 @@ class StartTest:
         table.add_column("Expected")
         table.add_column("Elapsed time", style='italic', justify='center')
         table.add_column("Status", style='bold', justify='center')
-        console = Console()
+        console = Console(color_system='windows') if sys.platform.startswith('win') else Console()
 
         # print_flag
         print_flag = False
