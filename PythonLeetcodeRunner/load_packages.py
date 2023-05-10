@@ -36,7 +36,8 @@ import re
 
 ## 第三方的
 from sortedcontainers import *
-from numpy import *
+# from numpy import *
+import numpy as np
 
 import importlib
 if importlib.find_loader('visualize_tools'):
